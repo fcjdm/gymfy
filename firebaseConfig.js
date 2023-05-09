@@ -1,4 +1,8 @@
-export const firebaseConfig = {
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+
+
+const firebaseConfig = {
     apiKey: "AIzaSyDtjlSKCakftogDK0XVeOwv0e4iI2R4Jh8",
     authDomain: "gymfy-e76e2.firebaseapp.com",
     projectId: "gymfy-e76e2",
@@ -7,3 +11,7 @@ export const firebaseConfig = {
     appId: "1:1098437118781:web:2c2ce0413c17adfbe81354"
 };
 
+const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth();
+export default app;
