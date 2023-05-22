@@ -1,13 +1,30 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, TextInput, Button, KeyboardAvoidingView } from 'react-native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
+import { auth, db } from '../firebaseConfig';
+import{ collection, addDoc } from "firebase/firestore";
+
+
 
 export default function LoginScreen({navigation}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState('');
   
+  const addUser = async() => {
+    try{
+      const docRef = await addDoc(collection(db,'users'), {
+        email: auth.currentUser.email,
+        // Otros campos del usuario que desees añadir
+      })
+      .then(() => {
+        console.log("Usuario con id: ", docRef.id);
+      })
+      
+    }catch(e){
+      console.error("Error al añadir documento: ", e);
+    }      
+  };
 
   const handleLogin = () => {
   signInWithEmailAndPassword(auth, email, password)
@@ -15,7 +32,7 @@ export default function LoginScreen({navigation}) {
       setMessage('Login succesfully');
       const user = userCredential.user;
       console.log(user);
-      navigation.navigate('SuccessScreen');
+      navigation.navigate('Excercise');
     })
     .catch((error) => setMessage(error.message));
   };
@@ -24,10 +41,9 @@ export default function LoginScreen({navigation}) {
   createUserWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       setMessage('Register succesfully!');
-      const user = userCredential.user;
-      console.log(user);
-      navigation.navigate('SuccessScreen');
-    })
+      addUser();
+      navigation.navigate('Excercise');
+  })
     .catch((error) => setMessage(error.message));
   };
 
