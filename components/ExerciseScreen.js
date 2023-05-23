@@ -1,16 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect  } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal, StyleSheet, TextInput, Button } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getFirestore, collection, getDocs, db } from "firebase/firestore";
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 
 export default function SuccessScreen() {
   // Ejemplos de datos de ejercicios
-  const exercises = [
-    { name: 'Ejercicio 1', duration: '10 minutos', difficulty: 'Fácil' },
-    { name: 'Ejercicio 2', duration: '15 minutos', difficulty: 'Medio' },
-    { name: 'Ejercicio 3', duration: '20 minutos', difficulty: 'Difícil' },
-  ];
+  const [exercises, setExercises] = useState([]);
 
   const [userLists, setUserLists] = useState([
     { id: 1, name: 'Lista 1' },
@@ -21,6 +18,22 @@ export default function SuccessScreen() {
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showUserLists, setShowUserLists] = useState(false);
+
+  useEffect(() => {
+    // Consulta los ejercicios desde Firebase y actualiza el estado
+    const fetchExercises = async () => {
+      try {
+        const db = getFirestore();
+        const exercisesSnapshot = await getDocs(collection(db, 'exercises'));
+        const exercisesData = exercisesSnapshot.docs.map((doc) => doc.data());
+        setExercises(exercisesData);
+      } catch (error) {
+        console.log('Error al obtener los ejercicios', error);
+      }
+    };
+
+    fetchExercises();
+  }, []);
 
   const handleExerciseClick = (exercise) => {
     setSelectedExercise(exercise);
@@ -64,7 +77,7 @@ export default function SuccessScreen() {
             {selectedExercise && (
               <View>
                 <Text style={styles.modalTitle}>{selectedExercise.name}</Text>
-                <Text style={styles.modalText}>Descripción: {selectedExercise.description}</Text>
+                <Text style={styles.modalText}>Descripción: {selectedExercise.instructions}</Text>
                 <Text style={styles.modalText}>Dificultad: {selectedExercise.difficulty}</Text>
                 <Text style={styles.modalText}>Duración: {selectedExercise.duration}</Text>
 

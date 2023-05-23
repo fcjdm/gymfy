@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect  } from "react";
 import { StyleSheet, View, Text, TextInput, Button, KeyboardAvoidingView } from 'react-native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
-import{ collection, addDoc } from "firebase/firestore";
-
-
+import{ collection, addDoc, doc } from "firebase/firestore";
+import fetch from 'isomorphic-fetch';
 
 export default function LoginScreen({navigation}) {
   const [email, setEmail] = useState("");
@@ -15,7 +14,6 @@ export default function LoginScreen({navigation}) {
     try{
       const docRef = await addDoc(collection(db,'users'), {
         email: auth.currentUser.email,
-        // Otros campos del usuario que desees añadir
       })
       .then(() => {
         console.log("Usuario con id: ", docRef.id);
@@ -46,6 +44,30 @@ export default function LoginScreen({navigation}) {
   })
     .catch((error) => setMessage(error.message));
   };
+ //Insercion de datos--------------------------------------------------
+ /* useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://api.api-ninjas.com/v1/exercises', {
+          headers: {
+            'X-Api-Key': 'wMCu8kvndCMvHusxXu5Mtg==TKQ47CEc5fLxL46j',
+          },
+        });
+        const data = await response.json();
+
+        const exercisesCollectionRef = collection(db, 'exercises');
+        for (let exercise of data) {
+          await addDoc(exercisesCollectionRef, exercise);
+        }
+
+        console.log('Datos importados correctamente en Firestore.');
+      } catch (error) {
+        console.error('Error al importar los datos:', error);
+      }
+    };
+
+    fetchData();
+  }, []);*/
 
   return (
     <KeyboardAvoidingView>
