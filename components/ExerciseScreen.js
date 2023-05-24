@@ -1,20 +1,16 @@
-import React, { useState, useEffect  } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal, StyleSheet, TextInput, Button } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, collection, getDocs, db } from "firebase/firestore";
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
 
-export default function SuccessScreen() {
+export default function ExerciseScreen() {
   // Ejemplos de datos de ejercicios
   const [exercises, setExercises] = useState([]);
-
   const [userLists, setUserLists] = useState([
     { id: 1, name: 'Lista 1' },
     { id: 2, name: 'Lista 2' },
     { id: 3, name: 'Lista 3' },
   ]);
-
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showUserLists, setShowUserLists] = useState(false);
@@ -52,67 +48,82 @@ export default function SuccessScreen() {
   };
 
   return (
-    <View>
-       <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10 }}>Lista de Ejercicios</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Lista de Ejercicios</Text>
       <ScrollView>
         {exercises.map((exercise, index) => (
           <TouchableOpacity key={index} onPress={() => handleExerciseClick(exercise)}>
-              <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{exercise.name}</Text>
+            <View style={styles.exerciseItem}>
+              <Text style={styles.exerciseName}>{exercise.name}</Text>
               <Text>Duración: {exercise.duration}</Text>
               <Text>Dificultad: {exercise.difficulty}</Text>
-              </View>
+            </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       <Modal visible={isModalVisible} transparent={true} animationType="fade">
-      <View style={styles.modalContainer}>
-        {!showUserLists ? (
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setIsModalVisible(false)}>
-              <Ionicons name="close-outline" size={24} color="black" />
-            </TouchableOpacity>
+        <View style={styles.modalContainer}>
+          {!showUserLists ? (
+            <View style={styles.modalContent}>
+              <TouchableOpacity style={styles.closeButton} onPress={() => setIsModalVisible(false)}>
+                <Ionicons name="close-outline" size={24} color="black" />
+              </TouchableOpacity>
 
-            {selectedExercise && (
-              <View>
-                <Text style={styles.modalTitle}>{selectedExercise.name}</Text>
-                <Text style={styles.modalText}>Descripción: {selectedExercise.instructions}</Text>
-                <Text style={styles.modalText}>Dificultad: {selectedExercise.difficulty}</Text>
-                <Text style={styles.modalText}>Duración: {selectedExercise.duration}</Text>
+              {selectedExercise && (
+                <View>
+                  <Text style={styles.modalTitle}>{selectedExercise.name}</Text>
+                  <Text style={styles.modalText}>Descripción: {selectedExercise.instructions}</Text>
+                  <Text style={styles.modalText}>Dificultad: {selectedExercise.difficulty}</Text>
+                  <Text style={styles.modalText}>Duración: {selectedExercise.duration}</Text>
 
-                <Button title="Añadir a una lista" onPress={() => setShowUserLists(true)} />
-              </View>
-            )}
-          </View>
-        ) : (
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.goBackButton} onPress={() => setShowUserLists(false)}>
-              <Ionicons name="arrow-back-outline" size={24} color="black" />
-            </TouchableOpacity>
+                  <Button title="Añadir a una lista" onPress={() => setShowUserLists(true)} />
+                </View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.modalContent}>
+              <TouchableOpacity style={styles.goBackButton} onPress={() => setShowUserLists(false)}>
+                <Ionicons name="arrow-back-outline" size={24} color="black" />
+              </TouchableOpacity>
 
-            <Text style={styles.addToListText}>Añadir a una lista:</Text>
-            <ScrollView style={styles.listContainer}>
-              {userLists.map((list) => (
-                <TouchableOpacity key={list.id} style={styles.listItem} onPress={() => handleAddToList(list.id)}>
-                  <Text>{list.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+              <Text style={styles.addToListText}>Añadir a una lista:</Text>
+              <ScrollView style={styles.listContainer}>
+                {userLists.map((list) => (
+                  <TouchableOpacity key={list.id} style={styles.listItem} onPress={() => handleAddToList(list.id)}>
+                    <Text>{list.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
-            <Button title="Crear nueva lista" onPress={handleCreateNewList} />
-          </View>
-        )}
-      </View>
-    </Modal>
-  </View>
-)};
+              <Button title="Crear nueva lista" onPress={handleCreateNewList} />
+            </View>
+          )}
+        </View>
+      </Modal>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  exerciseItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  exerciseName: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   modalContainer: {
     flex: 1,
@@ -145,7 +156,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
   },
-
   closeButton: {
     position: 'absolute',
     top: 2,
@@ -159,5 +169,16 @@ const styles = StyleSheet.create({
     left: 10,
     zIndex: 1,
     padding: 10,
+  },
+  listContainer: {
+    maxHeight: 200,
+    marginBottom: 10,
+  },
+  listItem: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginBottom: 5,
+    borderRadius: 5,
   },
 });

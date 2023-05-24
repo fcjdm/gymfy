@@ -1,5 +1,5 @@
 import React, { useState, useEffect  } from "react";
-import { StyleSheet, View, Text, TextInput, Button, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, Button, KeyboardAvoidingView, Platform } from 'react-native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
 import{ collection, addDoc, doc } from "firebase/firestore";
@@ -30,7 +30,7 @@ export default function LoginScreen({navigation}) {
       setMessage('Login succesfully');
       const user = userCredential.user;
       console.log(user);
-      navigation.navigate('Excercise');
+      navigation.navigate('Exercise');
     })
     .catch((error) => setMessage(error.message));
   };
@@ -40,7 +40,7 @@ export default function LoginScreen({navigation}) {
     .then((userCredential) => {
       setMessage('Register succesfully!');
       addUser();
-      navigation.navigate('Excercise');
+      navigation.navigate('Exercise');
   })
     .catch((error) => setMessage(error.message));
   };
@@ -70,63 +70,70 @@ export default function LoginScreen({navigation}) {
   }, []);*/
 
   return (
-    <KeyboardAvoidingView>
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <View style={styles.formContainer}>
         <Text style={styles.title}>Iniciar sesión</Text>
-        {message ? (
-          <Text style={styles.error}>{message}</Text>
-        ) : null}
+        {message ? <Text style={styles.error}>{message}</Text> : null}
         <TextInput
           style={styles.input}
           placeholder="Correo electrónico"
           autoCapitalize="none"
-          onChangeText={email => setEmail(email)}
+          onChangeText={(email) => setEmail(email)}
           value={email}
         />
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
           secureTextEntry
-          onChangeText={password => setPassword(password)}
+          onChangeText={(password) => setPassword(password)}
           value={password}
         />
+        <View style={styles.buttonContainer}>
+          <Button title="Iniciar sesión" onPress={handleLogin} />
+          <Button title="Registrarse" onPress={handleRegister} />
+        </View>
       </View>
-      <View>
-        <Button 
-          title="Iniciar sesión" 
-          onPress={handleLogin} 
-        />
-        <Button
-          title="Registrarse"
-          onPress={handleRegister}
-        />
-      </View>     
     </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
+  },
+  formContainer: {
+    width: "100%",
+    maxWidth: 400,
   },
   title: {
     fontSize: 28,
     marginBottom: 20,
+    textAlign: "center",
   },
   input: {
-    width: '100%',
+    width: "100%",
     height: 50,
     borderWidth: 1,
-    borderColor: 'gray',
+    borderColor: "gray",
     marginBottom: 10,
     paddingHorizontal: 10,
     borderRadius: 4,
   },
   error: {
-    color: 'red',
+    color: "red",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
     marginBottom: 10,
   },
 });
