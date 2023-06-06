@@ -30,7 +30,7 @@ export default function LoginScreen({navigation}) {
       setMessage('Login succesfully');
       const user = userCredential.user;
       console.log(user);
-      navigation.navigate('Exercise');
+      navigation.navigate('Home');
     })
     .catch((error) => setMessage(error.message));
   };
@@ -75,25 +75,25 @@ export default function LoginScreen({navigation}) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.formContainer}>
-        <Text style={styles.title}>Iniciar sesión</Text>
+        <Text style={styles.title}>LOG IN</Text>
         {message ? <Text style={styles.error}>{message}</Text> : null}
         <TextInput
           style={styles.input}
-          placeholder="Correo electrónico"
+          placeholder="Email"
           autoCapitalize="none"
           onChangeText={(email) => setEmail(email)}
           value={email}
         />
         <TextInput
           style={styles.input}
-          placeholder="Contraseña"
+          placeholder="Password"
           secureTextEntry
           onChangeText={(password) => setPassword(password)}
           value={password}
         />
         <View style={styles.buttonContainer}>
-          <Button title="Iniciar sesión" onPress={handleLogin} />
-          <Button title="Registrarse" onPress={handleRegister} />
+          <Button title="Log in" onPress={handleLogin} />
+          <Button title="Sign in" onPress={handleRegister} />
         </View>
       </View>
     </KeyboardAvoidingView>

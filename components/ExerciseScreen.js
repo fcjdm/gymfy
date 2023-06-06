@@ -1,44 +1,53 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal, StyleSheet, TextInput, Button } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { View, Text, ScrollView, TouchableOpacity, Modal, StyleSheet, TextInput, Button} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getFirestore, collection, getDocs, db } from "firebase/firestore";
+import { getFirestore, collection, getDocs, query, where } from "firebase/firestore";
 
 export default function ExerciseScreen() {
-  // Ejemplos de datos de ejercicios
   const [exercises, setExercises] = useState([]);
-  const [userLists, setUserLists] = useState([
-    { id: 1, name: 'Lista 1' },
-    { id: 2, name: 'Lista 2' },
-    { id: 3, name: 'Lista 3' },
-  ]);
+  const [userLists, setUserLists] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showUserLists, setShowUserLists] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchField, setSearchField] = useState('name'); // Campo de búsqueda por defecto
 
   useEffect(() => {
-    // Consulta los ejercicios desde Firebase y actualiza el estado
-    const fetchExercises = async () => {
-      try {
-        const db = getFirestore();
-        const exercisesSnapshot = await getDocs(collection(db, 'exercises'));
-        const exercisesData = exercisesSnapshot.docs.map((doc) => doc.data());
-        setExercises(exercisesData);
-      } catch (error) {
-        console.log('Error al obtener los ejercicios', error);
-      }
-    };
-
     fetchExercises();
   }, []);
+
+  const fetchExercises = async () => {
+    try {
+      const db = getFirestore();
+      let exercisesQuery = query(collection(db, 'exercises'));
+
+      if (searchTerm !== '') {
+        exercisesQuery = query(exercisesQuery, where(searchField, '>=', searchTerm));
+      }
+
+      const exercisesSnapshot = await getDocs(exercisesQuery);
+      const exercisesData = exercisesSnapshot.docs.map((doc) => doc.data());
+      setExercises(exercisesData);
+    } catch (error) {
+      console.log('Error al obtener los ejercicios', error);
+    }
+  };
 
   const handleExerciseClick = (exercise) => {
     setSelectedExercise(exercise);
     setIsModalVisible(true);
   };
 
-  const handleAddToList = () => {
-    // Lógica para agregar el ejercicio a una lista existente o crear una nueva lista
-    // Puedes utilizar las funciones de Firebase Firestore para realizar estas operaciones
+  const handleAddToList = async () =>{
+    try {
+      const db = getFirestore();
+      const exerciseListsSnapshot = await getDocs(collection(db, 'exerciseLists'));
+      const exerciseListsData = exerciseListsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setUserLists(exerciseListsData);
+    } catch (error) {
+      console.log('Error al obtener las listas de ejercicios', error);
+    }
   };
 
   const handleCreateNewList = () => {
@@ -47,9 +56,36 @@ export default function ExerciseScreen() {
     console.log('Crear una nueva lista y agregar el ejercicio a ella');
   };
 
+  const handleSearch = () => {
+    fetchExercises();
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Lista de Ejercicios</Text>
+
+      <View style={styles.searchContainer}>
+        <Picker
+          style={styles.picker}
+          selectedValue={searchField}
+          onValueChange={(itemValue) => setSearchField(itemValue)}
+        >
+          <Picker.Item label="Nombre" value="name" />
+          <Picker.Item label="Dificultad" value="difficulty" />
+          <Picker.Item label="Duración" value="duration" />
+          <Picker.Item label="Tipo de ejercicio" value="type" />
+        </Picker>
+
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar ejercicios..."
+          value={searchTerm}
+          onChangeText={(text) => setSearchTerm(text)}
+        />
+
+        <Button title="Buscar" onPress={handleSearch} />
+      </View>
+
       <ScrollView>
         {exercises.map((exercise, index) => (
           <TouchableOpacity key={index} onPress={() => handleExerciseClick(exercise)}>
@@ -73,7 +109,7 @@ export default function ExerciseScreen() {
               {selectedExercise && (
                 <View>
                   <Text style={styles.modalTitle}>{selectedExercise.name}</Text>
-                  <Text style={styles.modalText}>Descripción: {selectedExercise.instructions}</Text>
+                  <Text style={styles.modalText}>Descripción: {selectedExercise.description}</Text>
                   <Text style={styles.modalText}>Dificultad: {selectedExercise.difficulty}</Text>
                   <Text style={styles.modalText}>Duración: {selectedExercise.duration}</Text>
 
@@ -115,6 +151,23 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  picker: {
+    flex: 1,
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 2,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingLeft: 10,
   },
   exerciseItem: {
     padding: 10,
