@@ -2,8 +2,7 @@ import React, { useState, useEffect  } from "react";
 import { StyleSheet, View, Text, TextInput, Button, KeyboardAvoidingView, Platform } from 'react-native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
-import{ collection, addDoc, doc } from "firebase/firestore";
-import fetch from 'isomorphic-fetch';
+import{ collection, addDoc} from "firebase/firestore";
 
 export default function LoginScreen({navigation}) {
   const [email, setEmail] = useState("");
