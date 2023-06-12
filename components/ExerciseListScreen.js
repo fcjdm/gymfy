@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Button, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getFirestore, collection, getDocs, query, where, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import { auth } from '../firebaseConfig';
+import {collection, getDocs, query, where, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import { auth, db } from '../firebaseConfig';
 import Modal from 'react-native-modal';
 
-export default function ExerciseListScreen() {
+export default function ExerciseListScreen({navigation}) {
   const [exerciseLists, setExerciseLists] = useState([]);
   const [selectedList, setSelectedList] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -14,17 +14,27 @@ export default function ExerciseListScreen() {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [listName, setListName] = useState('');
   const [userEmail, setUserEmail] = useState('');
-  const [selectedExerciseToDelete, setSelectedExerciseToDelete] = useState(null); // Nuevo estado
+  const [selectedExerciseToDelete, setSelectedExerciseToDelete] = useState(null);
+  const [isDeleteConfirmationVisible, setIsDeleteConfirmationVisible] = useState(false);
 
   useEffect(() => {
-    fetchExerciseLists();
-    fetchUserEmail();
     if (isEditModalVisible) {
       setListName(selectedList?.name);
     } else if (isCreateModalVisible) {
       setListName('');
     }
   }, [isEditModalVisible, selectedList]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchExerciseLists();
+      fetchUserEmail();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [navigation]);
 
   const fetchUserEmail = async () => {
     const user = auth.currentUser;
@@ -35,7 +45,6 @@ export default function ExerciseListScreen() {
 
   const fetchExerciseLists = async () => {
     try {
-      const db = getFirestore();
       const exerciseListsSnapshot = await getDocs(collection(db, 'exerciseLists'));
       const exerciseListsData = exerciseListsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setExerciseLists(exerciseListsData);
@@ -51,7 +60,6 @@ export default function ExerciseListScreen() {
 
   const handleCreateList = async () => {
     try {
-      const db = getFirestore();
       const newList = {
         name: listName,
         exercises: [],
@@ -74,7 +82,6 @@ export default function ExerciseListScreen() {
 
   const handleEditListName = async () => {
     try {
-      const db = getFirestore();
       const listRef = doc(db, 'exerciseLists', selectedList.id);
       await updateDoc(listRef, { name: listName });
       setExerciseLists((prevLists) =>
@@ -93,7 +100,6 @@ export default function ExerciseListScreen() {
 
   const handleDeleteList = async () => {
     try {
-      const db = getFirestore();
       const listRef = doc(db, 'exerciseLists', selectedList.id);
       await deleteDoc(listRef);
   
@@ -111,19 +117,12 @@ export default function ExerciseListScreen() {
   };
 
   const handleExerciseLongPress = (exercise) => {
-    // Filtrar la lista de ejercicios y mantener solo los que no sean iguales al ejercicio seleccionado
-    const updatedExercises = selectedList.exercises.filter((item) => item !== exercise);
-  
-    // Actualizar el estado con la nueva lista de ejercicios
-    setSelectedList({
-      ...selectedList,
-      exercises: updatedExercises,
-    });
+    setSelectedExerciseToDelete(exercise);
+    setIsDeleteConfirmationVisible(true);
   };
 
   const handleConfirmExerciseDelete = async () => {
     try {
-      const db = getFirestore();
       const listRef = doc(db, 'exerciseLists', selectedList.id);
       await updateDoc(listRef, {
         exercises: selectedList.exercises.filter((exercise) => exercise.id !== selectedExerciseToDelete.id),
@@ -136,11 +135,14 @@ export default function ExerciseListScreen() {
             return { ...list, exercises: list.exercises.filter((exercise) => exercise.id !== selectedExerciseToDelete.id) };
           }
           return list;
-        })
+        })  
       );
   
       setSelectedExerciseToDelete(null);
+      setIsDeleteConfirmationVisible(false);
       setSelectedExercise(null);
+      fetchExerciseLists();
+      fetchUserEmail();
     } catch (error) {
       console.log('Error al borrar el ejercicio', error);
     }
@@ -167,7 +169,7 @@ export default function ExerciseListScreen() {
         ))}
       </ScrollView>
 
-      <Modal isVisible={isModalVisible}>
+      <Modal isVisible={isModalVisible}  backdropColor={'transparent'} style={{ margin: 0, backgroundColor: 'rgba(0,0,0,.6)' }}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <TouchableOpacity style={styles.closeButton} onPress={() => setIsModalVisible(false)}>
@@ -193,24 +195,24 @@ export default function ExerciseListScreen() {
       </Modal>
 
       {selectedExercise && (
-        <Modal isVisible={selectedExercise !== null}>
+        <Modal isVisible={selectedExercise !== null}  backdropColor={'transparent'} style={{ margin: 0, backgroundColor: 'rgba(0,0,0,.6)' }}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedExercise(null)}>
                 <Ionicons name="close" size={24} color="black" />
               </TouchableOpacity>
                 <Text style={styles.modalTitle}>{selectedExercise?.name}</Text>
-                <Text style={styles.modalText}>Difficulty: {selectedExercise.difficulty}</Text>
-                <Text style={styles.modalText}>Muscle: {selectedExercise.muscle}</Text>
-                <Text style={styles.modalText}>Exercise type: {selectedExercise.instructions}</Text>
-                <Text style={styles.modalText}>Description: {selectedExercise.instructions}</Text>
+                <Text style={styles.modalText}><b>Difficulty:</b> {selectedExercise.difficulty}</Text>
+                <Text style={styles.modalText}><b>Muscle:</b>  {selectedExercise.muscle}</Text>
+                <Text style={styles.modalText}><b>Exercise type:</b> {selectedExercise.instructions}</Text>
+                <Text style={styles.modalText}><b>Description:</b> {selectedExercise.instructions}</Text>
             </View>
           </View>
         </Modal>
       )}
 
       {isCreateModalVisible && (
-        <Modal isVisible={isCreateModalVisible}>
+        <Modal isVisible={isCreateModalVisible} backdropColor={'transparent'} style={{ margin: 0, backgroundColor: 'rgba(0,0,0,.6)' }}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <TouchableOpacity style={styles.closeButton} onPress={() => setIsCreateModalVisible(false)}>
@@ -230,7 +232,7 @@ export default function ExerciseListScreen() {
       )}
 
       {isEditModalVisible && (
-        <Modal isVisible={isEditModalVisible}>
+        <Modal isVisible={isEditModalVisible} backdropColor={'transparent'} style={{ margin: 0, backgroundColor: 'rgba(0,0,0,.6)' }}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <TouchableOpacity style={styles.closeButton} onPress={() => setIsEditModalVisible(false)}>
@@ -244,6 +246,7 @@ export default function ExerciseListScreen() {
                 onChangeText={(text) => setListName(text)}
               />
               <Button title="Guardar" onPress={handleEditListName} />
+              <br/>
               <Button title="Borrar" onPress={handleDeleteList} />
             </View>
           </View>
@@ -251,17 +254,17 @@ export default function ExerciseListScreen() {
       )}
 
       {/* Modal de confirmación para borrar un ejercicio */}
-      <Modal isVisible={selectedExerciseToDelete !== null}>
+      <Modal isVisible={isDeleteConfirmationVisible} backdropColor={'transparent'} style={{ margin: 0, backgroundColor: 'rgba(0,0,0,.6)' }}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.confirmDeleteText}>¿Estás seguro de que quieres borrar este ejercicio?</Text>
             <View style={styles.confirmDeleteButtonsContainer}>
-              <Pressable style={styles.confirmDeleteButton} onPress={() => handleConfirmExerciseDelete()}>
+              <Pressable style={styles.confirmDeleteButton} onPress={handleConfirmExerciseDelete}>
                 <Text style={styles.confirmDeleteButtonText}>Sí</Text>
               </Pressable>
               <Pressable
                 style={[styles.confirmDeleteButton, styles.cancelDeleteButton]}
-                onPress={() => setSelectedExerciseToDelete(null)}
+                onPress={() => setIsDeleteConfirmationVisible(false)}
               >
                 <Text style={styles.confirmDeleteButtonText}>Cancelar</Text>
               </Pressable>

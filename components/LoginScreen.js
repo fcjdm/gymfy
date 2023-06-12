@@ -11,8 +11,12 @@ export default function LoginScreen({navigation}) {
   
   const addUser = async() => {
     try{
-      const docRef = await addDoc(collection(db,'users'), {
+      const docRef = await addDoc(collection(db,'users', auth.currentUser.uid), {
         email: auth.currentUser.email,
+        name: '',
+        dateOfBirth: '',
+        nationality: '',
+        photoURL: '',
       })
       .then(() => {
         console.log("Usuario con id: ", docRef.id);
@@ -39,7 +43,7 @@ export default function LoginScreen({navigation}) {
     .then((userCredential) => {
       setMessage('Register succesfully!');
       addUser();
-      navigation.navigate('Exercise');
+      navigation.navigate('Home');
   })
     .catch((error) => setMessage(error.message));
   };

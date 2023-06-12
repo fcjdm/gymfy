@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Picker } from '@react-native-picker/picker';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Button} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Button } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, collection, getDocs, query, where, doc, updateDoc, getDoc, addDoc } from "firebase/firestore";
 import { arrayUnion } from "firebase/firestore";
@@ -8,7 +8,7 @@ import { auth } from '../firebaseConfig';
 import Modal from 'react-native-modal';
 
 
-export default function ExerciseScreen() {
+export default function ExerciseScreen({navigation}) {
   const [exercises, setExercises] = useState([]);
   const [userLists, setUserLists] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -18,10 +18,6 @@ export default function ExerciseScreen() {
   const [searchField, setSearchField] = useState('name');
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [listName, setListName] = useState('');
-
-  useEffect(() => {
-    fetchExercises();
-  }, []);
 
   const fetchExercises = async () => {
     try {
@@ -39,6 +35,16 @@ export default function ExerciseScreen() {
       console.log('Error obtaining exercises', error);
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchExercises();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [navigation]);
 
   const handleExerciseClick = (exercise) => {
     setSelectedExercise(exercise);
@@ -171,7 +177,7 @@ export default function ExerciseScreen() {
         ))}
       </ScrollView>
 
-      <Modal isVisible={isModalVisible}>
+      <Modal isVisible={isModalVisible} backdropColor={'transparent'} style={{ margin: 0, backgroundColor: 'rgba(0,0,0,.6)' }}>
         <View style={styles.modalContainer}>
           {!showUserLists ? (
             <View style={styles.modalContent}>
@@ -221,7 +227,7 @@ export default function ExerciseScreen() {
         </View>
       </Modal>
 
-      <Modal isVisible={isCreatingList}>
+      <Modal isVisible={isCreatingList} backdropColor={'transparent'} style={{ margin: 0, backgroundColor: 'rgba(0,0,0,.6)' }}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Create new list</Text>

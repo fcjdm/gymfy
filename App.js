@@ -7,12 +7,13 @@ import ExerciseScreen from './components/ExerciseScreen';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig'; // Importar el objeto `auth`
 import ExerciseListScreen from './components/ExerciseListScreen';
+import AddNewExerciseScreen from './components/AddNewExerciseScreen';
+import ProfileScreen from './components/ProfileScreen';
 
 const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = (props) => {
   const navigation = useNavigation();
-
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -61,6 +62,8 @@ export default function App() {
         <Drawer.Screen name="Login" component={LoginScreen} options={{ headerShown: false, drawerLabel: () => null }} />
         <Drawer.Screen name="Home" component={ExerciseScreen} />
         <Drawer.Screen name="My lists" component={ExerciseListScreen} />
+        <Drawer.Screen name="New Exercise" component={AddNewExerciseScreen} />
+        <Drawer.Screen name="Profile" component={ProfileScreen} />
       </Drawer.Navigator>
     </NavigationContainer>
   );
