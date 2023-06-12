@@ -8,24 +8,6 @@ export default function LoginScreen({navigation}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState('');
-  
-  const addUser = async() => {
-    try{
-      const docRef = await addDoc(collection(db,'users', auth.currentUser.uid), {
-        email: auth.currentUser.email,
-        name: '',
-        dateOfBirth: '',
-        nationality: '',
-        photoURL: '',
-      })
-      .then(() => {
-        console.log("Usuario con id: ", docRef.id);
-      })
-      
-    }catch(e){
-      console.error("Error al añadir documento: ", e);
-    }      
-  };
 
   const handleLogin = () => {
   signInWithEmailAndPassword(auth, email, password)
@@ -42,7 +24,6 @@ export default function LoginScreen({navigation}) {
   createUserWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       setMessage('Register succesfully!');
-      addUser();
       navigation.navigate('Home');
   })
     .catch((error) => setMessage(error.message));

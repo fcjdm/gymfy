@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, TextInput, Button, Alert, Modal } from 'react-native';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, TextInput, Button, Alert, Platform } from 'react-native';
+import { doc, setDoc, getDoc, collection } from 'firebase/firestore';
 import { sendPasswordResetEmail, deleteUser, updateProfile } from 'firebase/auth';
 import { auth, storage, db } from '../firebaseConfig';
-import * as ImagePicker from 'react-native-image-picker';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import * as ImagePicker from 'expo-image-picker';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function ProfileScreen({ navigation }) {
   const [userProfile, setUserProfile] = useState(null);
@@ -12,9 +12,7 @@ export default function ProfileScreen({ navigation }) {
   const [name, setName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [nationality, setNationality] = useState('');
-  const [profileImage, setProfileImage] = useState(null);
-  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
-  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [image, setImage] = useState(null);
   const user = auth.currentUser;
 
   useEffect(() => {
@@ -32,6 +30,9 @@ export default function ProfileScreen({ navigation }) {
           setName(userData.name || '');
           setDateOfBirth(userData.dateOfBirth || '');
           setNationality(userData.nationality || '');
+          if (userData.photoURL) {
+            setImage(userData.photoURL);
+          }
         }
       }
     } catch (error) {
@@ -47,7 +48,7 @@ export default function ProfileScreen({ navigation }) {
     try {
       if (user) {
         const userDoc = doc(db, 'users', user.uid);
-        await updateDoc(userDoc, { name, dateOfBirth, nationality });
+        await setDoc(userDoc, { name, dateOfBirth, nationality}, { merge: true });
         setIsEditing(false);
         Alert.alert('Perfil actualizado correctamente');
       }
@@ -60,7 +61,6 @@ export default function ProfileScreen({ navigation }) {
     try {
       if (user) {
         await sendPasswordResetEmail(auth, user.email);
-        setShowResetPasswordModal(false);
         alert('Se ha enviado un correo electrónico para restablecer la contraseña');
       }
     } catch (error) {
@@ -72,7 +72,6 @@ export default function ProfileScreen({ navigation }) {
     try {
       if (user) {
         await deleteUser(user);
-        setShowDeleteAccountModal(false);
         navigation.navigate('LoginScreen');
         alert('Cuenta eliminada correctamente');
       }
@@ -82,134 +81,91 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const handleChooseProfileImage = async () => {
-    const options = {
-      mediaType: 'photo',
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    };
-
-    ImagePicker.launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log('Selección de imagen cancelada');
-      } else if (response.error) {
-        console.log('Error al seleccionar la imagen:', response.error);
-      } else {
-        setProfileImage(response.uri);
-        uploadProfileImage(response.uri);
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permissionResult.granted === false) {
+        alert('Permission to access camera roll is required!');
+        return;
       }
-    });
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.cancelled) {
+        const { uri } = result;
+        setImage(uri);
+        uploadProfileImage(uri);
+      }
+    } catch (error) {
+      console.log('Error al elegir la imagen de perfil', error);
+    }
   };
 
-  const uploadProfileImage = async (imageUri) => {
+  const uploadProfileImage = async (uri) => {
     try {
-      const response = await fetch(imageUri);
+      const filename = uri.substring(uri.lastIndexOf('/') + 1);
+      const uploadUri = Platform.OS === 'web' ? uri.replace('file://', '') : uri;
+  
+      const storageRef = ref(storage, `profileImages/${user.uid}/${filename}`);
+      const response = await fetch(uploadUri);
       const blob = await response.blob();
   
-      const imageRef = ref(storage, `profileImages/${user.uid}`);
-      await uploadBytes(imageRef, blob);
-      const downloadURL = await getDownloadURL(imageRef);
-  
-      // Actualizar la propiedad 'photoURL' en el perfil del usuario en Auth
-      await updateProfile(auth.currentUser, { photoURL: downloadURL });
-  
-      // Actualizar la propiedad 'photoURL' en el documento del usuario en Firestore
-      const userDoc = doc(db, 'users', user.uid);
-      await setDoc(userDoc, { photoURL: downloadURL });
-  
-      // Actualizar la propiedad 'photoURL' en el estado userProfile
+      const snapshot = await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
       setUserProfile((prevProfile) => ({ ...prevProfile, photoURL: downloadURL }));
+      const userDoc = doc(db, 'users', user.uid);
+      await setDoc(userDoc, { photoURL: downloadURL}, { merge: true });
     } catch (error) {
       console.log('Error al cargar la imagen de perfil', error);
-    }
-  };
-
-  const renderProfileImage = () => {
-    if (profileImage) {
-      return <Image source={{ uri: profileImage }} style={styles.profileImage} />;
-    } else if (userProfile?.photoURL) {
-      return <Image source={{ uri: userProfile.photoURL }} style={styles.profileImage} />;
-    } else {
-      return <Text>No hay imagen de perfil</Text>;
-    }
-  };
-
-  const renderProfileFields = () => {
-    if (isEditing) {
-      return (
-        <>
-          <TextInput
-            placeholder="Nombre"
-            value={name}
-            onChangeText={setName}
-            style={styles.inputField}
-          />
-          <TextInput
-            placeholder="Fecha de Nacimiento"
-            value={dateOfBirth}
-            onChangeText={setDateOfBirth}
-            style={styles.inputField}
-          />
-          <TextInput
-            placeholder="Nacionalidad"
-            value={nationality}
-            onChangeText={setNationality}
-            style={styles.inputField}
-          />
-        </>
-      );
-    } else {
-      return (
-        <>
-          <Text>Nombre: {userProfile?.name || 'Sin nombre'}</Text>
-          <Text>Fecha de Nacimiento: {userProfile?.dateOfBirth || 'Sin fecha de nacimiento'}</Text>
-          <Text>Nacionalidad: {userProfile?.nationality || 'Sin nacionalidad'}</Text>
-        </>
-      );
     }
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleChooseProfileImage}>
-        {renderProfileImage()}
+        <View style={styles.imageContainer}>
+          {image ? (
+            <Image source={{ uri: image }} style={styles.profileImage} />
+          ) : (
+            <View style={styles.emptyProfileImage}>
+              <Text style={styles.emptyProfileImageText}>No hay foto de perfil</Text>
+            </View>
+          )}
+        </View>
       </TouchableOpacity>
-      {renderProfileFields()}
-      {isEditing ? (
-        <Button title="Guardar" onPress={handleSaveProfile} />
+      <TextInput
+        style={styles.input}
+        placeholder="Nombre"
+        value={name}
+        onChangeText={(text) => setName(text)}
+        editable={isEditing}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Fecha de Nacimiento"
+        value={dateOfBirth}
+        onChangeText={(text) => setDateOfBirth(text)}
+        editable={isEditing}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Nacionalidad"
+        value={nationality}
+        onChangeText={(text) => setNationality(text)}
+        editable={isEditing}
+      />
+      {!isEditing ? (
+        <Button title="Editar Perfil" onPress={handleEditProfile} />
       ) : (
-        <Button title="Editar" onPress={handleEditProfile} />
+        <Button title="Guardar Perfil" onPress={handleSaveProfile} />
       )}
-      <Button title="Restablecer Contraseña" onPress={() => setShowResetPasswordModal(true)} />
-      <Button title="Borrar Cuenta" onPress={() => setShowDeleteAccountModal(true)} color="red" />
-
-      {/* Reset Password Modal */}
-      <Modal visible={showResetPasswordModal} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Restablecer Contraseña</Text>
-            <Text style={styles.modalMessage}>¿Estás seguro de que deseas restablecer tu contraseña?</Text>
-            <View style={styles.modalButtons}>
-              <Button title="Cancelar" onPress={() => setShowResetPasswordModal(false)} />
-              <Button title="Aceptar" onPress={handleResetPassword} />
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Delete Account Modal */}
-      <Modal visible={showDeleteAccountModal} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Borrar Cuenta</Text>
-            <Text style={styles.modalMessage}>¿Estás seguro de que deseas borrar tu cuenta?</Text>
-            <View style={styles.modalButtons}>
-              <Button title="Cancelar" onPress={() => setShowDeleteAccountModal(false)} />
-              <Button title="Aceptar" onPress={handleDeleteAccount} />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <Button title="Restablecer Contraseña" onPress={handleResetPassword} />
+      <Button title="Eliminar Cuenta" onPress={handleDeleteAccount} />
     </View>
   );
 }
@@ -220,41 +176,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  profileImage: {
+  imageContainer: {
     width: 150,
     height: 150,
     borderRadius: 75,
+    backgroundColor: '#ccc',
+    overflow: 'hidden',
     marginBottom: 20,
   },
-  inputField: {
-    width: '80%',
-    height: 40,
-    marginBottom: 10,
-    borderColor: 'gray',
-    borderWidth: 1,
-    padding: 10,
+  profileImage: {
+    width: '100%',
+    height: '100%',
   },
-  modalContainer: {
+  emptyProfileImage: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
+  emptyProfileImageText: {
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  input: {
+    width: '80%',
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ccc',
     marginBottom: 10,
-  },
-  modalMessage: {
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    padding: 10,
   },
 });
