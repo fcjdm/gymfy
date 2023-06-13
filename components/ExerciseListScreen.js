@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Button, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {collection, getDocs, query, where, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import {collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import Modal from 'react-native-modal';
+
 
 export default function ExerciseListScreen({navigation}) {
   const [exerciseLists, setExerciseLists] = useState([]);
@@ -124,30 +125,33 @@ export default function ExerciseListScreen({navigation}) {
   const handleConfirmExerciseDelete = async () => {
     try {
       const listRef = doc(db, 'exerciseLists', selectedList.id);
-      await updateDoc(listRef, {
-        exercises: selectedList.exercises.filter((exercise) => exercise.id !== selectedExerciseToDelete.id),
-      });
+      const newList = { ...selectedList };
+      newList.exercises = newList.exercises.filter(
+        (exercise) => exercise.name !== selectedExerciseToDelete.name
+      );
+  
+      await updateDoc(listRef, { exercises: newList.exercises });
   
       // Actualiza la lista de ejercicios en el estado exerciseLists
       setExerciseLists((prevLists) =>
         prevLists.map((list) => {
           if (list.id === selectedList.id) {
-            return { ...list, exercises: list.exercises.filter((exercise) => exercise.id !== selectedExerciseToDelete.id) };
+            return newList;
           }
           return list;
-        })  
+        })
       );
+  
+      // Actualiza la lista de ejercicios en el estado selectedList
+      setSelectedList(newList);
   
       setSelectedExerciseToDelete(null);
       setIsDeleteConfirmationVisible(false);
       setSelectedExercise(null);
-      fetchExerciseLists();
-      fetchUserEmail();
     } catch (error) {
       console.log('Error al borrar el ejercicio', error);
     }
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Listas de Ejercicios</Text>
@@ -201,11 +205,11 @@ export default function ExerciseListScreen({navigation}) {
               <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedExercise(null)}>
                 <Ionicons name="close" size={24} color="black" />
               </TouchableOpacity>
-                <Text style={styles.modalTitle}>{selectedExercise?.name}</Text>
-                <Text style={styles.modalText}><b>Difficulty:</b> {selectedExercise.difficulty}</Text>
-                <Text style={styles.modalText}><b>Muscle:</b>  {selectedExercise.muscle}</Text>
-                <Text style={styles.modalText}><b>Exercise type:</b> {selectedExercise.instructions}</Text>
-                <Text style={styles.modalText}><b>Description:</b> {selectedExercise.instructions}</Text>
+              <Text style={styles.modalTextBold}>{selectedExercise.name}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Description:</Text>{selectedExercise.instructions}</Text>
             </View>
           </View>
         </Modal>
@@ -222,7 +226,6 @@ export default function ExerciseListScreen({navigation}) {
               <TextInput
                 style={styles.input}
                 placeholder="Nombre de la lista"
-                value={listName}
                 onChangeText={(text) => setListName(text)}
               />
               <Button title="Crear" onPress={handleCreateList} />
@@ -359,6 +362,9 @@ const styles = StyleSheet.create({
   confirmDeleteButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalTextBold: {
     fontWeight: 'bold',
   },
 });

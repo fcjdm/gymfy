@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Picker, Alert } from 'react-native';
 import { getFirestore, collection, addDoc, query, where, getDocs } from "firebase/firestore";
-import { useFocusEffect } from '@react-navigation/native';
 import { auth } from '../firebaseConfig';
 
 export default function ExerciseListScreen({navigation}) {
@@ -12,6 +11,7 @@ export default function ExerciseListScreen({navigation}) {
     type: '',
     instructions: '',
     email: auth.currentUser.email,
+    verified: false,
   });
 
   const handleChange = (name, value) => {
@@ -48,7 +48,7 @@ export default function ExerciseListScreen({navigation}) {
       <Text style={styles.title}>Add Exercise</Text>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Nombre del ejercicio:</Text>
+        <Text style={styles.label}>Exercise name:</Text>
         <TextInput
           style={styles.input}
           onChangeText={(value) => handleChange('name', value)}
@@ -58,7 +58,7 @@ export default function ExerciseListScreen({navigation}) {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Dificultad:</Text>
+        <Text style={styles.label}>Difficulty:</Text>
         <Picker
           style={styles.input}
           selectedValue={exerciseData.difficulty}
@@ -71,7 +71,7 @@ export default function ExerciseListScreen({navigation}) {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Músculo:</Text>
+        <Text style={styles.label}>Muscle:</Text>
         <TextInput
           style={styles.input}
           onChangeText={(value) => handleChange('muscle', value)}
@@ -81,7 +81,7 @@ export default function ExerciseListScreen({navigation}) {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Tipo de ejercicio:</Text>
+        <Text style={styles.label}>Exercise type:</Text>
         <TextInput
           style={styles.input}
           onChangeText={(value) => handleChange('type', value)}
@@ -91,7 +91,7 @@ export default function ExerciseListScreen({navigation}) {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Instrucciones:</Text>
+        <Text style={styles.label}>Instructions:</Text>
         <TextInput
           style={styles.textArea}
           multiline
@@ -101,7 +101,7 @@ export default function ExerciseListScreen({navigation}) {
         />
       </View>
 
-      <Button title="Añadir ejercicio" onPress={handleFormSubmit} />
+      <Button title="Add exercise" onPress={handleFormSubmit} />
 
     </View>
   );

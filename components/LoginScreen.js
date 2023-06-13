@@ -1,62 +1,46 @@
-import React, { useState, useEffect  } from "react";
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, Button, KeyboardAvoidingView, Platform } from 'react-native';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
-import{ collection, addDoc} from "firebase/firestore";
+import { collection, addDoc } from 'firebase/firestore';
 
-export default function LoginScreen({navigation}) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function LoginScreen({ navigation }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
 
   const handleLogin = () => {
-  signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      setMessage('Login succesfully');
-      const user = userCredential.user;
-      console.log(user);
-      navigation.navigate('Home');
-    })
-    .catch((error) => setMessage(error.message));
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        setMessage('Login successfully');
+        const user = userCredential.user;
+        console.log(user);
+        navigation.navigate('Home');
+      })
+      .catch((error) => setMessage(error.message));
   };
 
   const handleRegister = () => {
-  createUserWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      setMessage('Register succesfully!');
-      navigation.navigate('Home');
-  })
-    .catch((error) => setMessage(error.message));
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        setMessage('Register successfully!');
+        navigation.navigate('Home');
+      })
+      .catch((error) => setMessage(error.message));
   };
- //Insercion de datos--------------------------------------------------
- /* useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('https://api.api-ninjas.com/v1/exercises', {
-          headers: {
-            'X-Api-Key': 'wMCu8kvndCMvHusxXu5Mtg==TKQ47CEc5fLxL46j',
-          },
-        });
-        const data = await response.json();
 
-        const exercisesCollectionRef = collection(db, 'exercises');
-        for (let exercise of data) {
-          await addDoc(exercisesCollectionRef, exercise);
-        }
-
-        console.log('Datos importados correctamente en Firestore.');
-      } catch (error) {
-        console.error('Error al importar los datos:', error);
-      }
-    };
-
-    fetchData();
-  }, []);*/
+  const handleResetPassword = () => {
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        setMessage('Reset password email sent successfully');
+      })
+      .catch((error) => setMessage(error.message));
+  };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.formContainer}>
         <Text style={styles.title}>LOG IN</Text>
@@ -79,6 +63,9 @@ export default function LoginScreen({navigation}) {
           <Button title="Log in" onPress={handleLogin} />
           <Button title="Sign in" onPress={handleRegister} />
         </View>
+        <View style={styles.buttonContainer}>
+          <Button title="Reset Password" onPress={handleResetPassword} />
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -87,36 +74,36 @@ export default function LoginScreen({navigation}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
   formContainer: {
-    width: "100%",
+    width: '100%',
     maxWidth: 400,
   },
   title: {
     fontSize: 28,
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: 'center',
   },
   input: {
-    width: "100%",
+    width: '100%',
     height: 50,
     borderWidth: 1,
-    borderColor: "gray",
+    borderColor: 'gray',
     marginBottom: 10,
     paddingHorizontal: 10,
     borderRadius: 4,
   },
   error: {
-    color: "red",
+    color: 'red',
     marginBottom: 10,
-    textAlign: "center",
+    textAlign: 'center',
   },
   buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 10,
     marginBottom: 10,
   },

@@ -6,6 +6,7 @@ import { getFirestore, collection, getDocs, query, where, doc, updateDoc, getDoc
 import { arrayUnion } from "firebase/firestore";
 import { auth } from '../firebaseConfig';
 import Modal from 'react-native-modal';
+import Checkbox from 'expo-checkbox';
 
 
 export default function ExerciseScreen({navigation}) {
@@ -18,16 +19,49 @@ export default function ExerciseScreen({navigation}) {
   const [searchField, setSearchField] = useState('name');
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [listName, setListName] = useState('');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('');
+  const [filterByEmail, setFilterByEmail] = useState(false);
+  const [verifiedFilter, setVerifiedFilter] = useState();
+  const [defaultFilters, setDefaultFilters] = useState({
+    searchField: 'name',
+    selectedDifficulty: '',
+    searchTerm: '',
+    filterByEmail: false,
+    verifiedFilter: '',
+  });
+
+  const resetFilters = () => {
+    setSearchField(defaultFilters.searchField);
+    setSelectedDifficulty(defaultFilters.selectedDifficulty);
+    setSearchTerm(defaultFilters.searchTerm);
+    setFilterByEmail(defaultFilters.filterByEmail);   
+    setVerifiedFilter(defaultFilters.verifiedFilter);
+  };
 
   const fetchExercises = async () => {
     try {
       const db = getFirestore();
       let exercisesQuery = query(collection(db, 'exercises'));
-
+  
       if (searchTerm !== '') {
         exercisesQuery = query(exercisesQuery, where(searchField, '>=', searchTerm));
       }
+      if (selectedDifficulty !== '') {
+        exercisesQuery = query(exercisesQuery, where('difficulty', '==', selectedDifficulty));
+      }
+  
+      // Aplicar filtro por email si está marcado el checkbox
+      if (filterByEmail) {
+        const user = auth.currentUser;
+        exercisesQuery = query(exercisesQuery, where('email', '==', user.email));
+      }
 
+      // Aplicar filtro de verified si está seleccionado
+      if (verifiedFilter === 'true' || verifiedFilter === 'false') {
+        const verifiedBool = verifiedFilter === 'true';
+        exercisesQuery = query(exercisesQuery, where('verified', '==', verifiedBool));
+      }
+  
       const exercisesSnapshot = await getDocs(exercisesQuery);
       const exercisesData = exercisesSnapshot.docs.map((doc) => doc.data());
       setExercises(exercisesData);
@@ -35,7 +69,7 @@ export default function ExerciseScreen({navigation}) {
       console.log('Error obtaining exercises', error);
     }
   };
-
+  
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchExercises();
@@ -147,9 +181,18 @@ export default function ExerciseScreen({navigation}) {
           onValueChange={(itemValue) => setSearchField(itemValue)}
         >
           <Picker.Item label="Name" value="name" />
-          <Picker.Item label="Difficulty" value="difficulty" />
           <Picker.Item label="Muscle" value="muscle" />
           <Picker.Item label="Exercise type" value="type" />
+        </Picker>
+        <Picker
+          style={styles.picker}
+          selectedValue={selectedDifficulty}
+          onValueChange={(itemValue) => setSelectedDifficulty(itemValue)}
+        >
+          <Picker.Item label="Select difficulty" value="" />
+          <Picker.Item label="Beginner" value="beginner" />
+          <Picker.Item label="Intermediate" value="intermediate" />
+          <Picker.Item label="Hard" value="hard" />
         </Picker>
 
         <TextInput
@@ -158,8 +201,27 @@ export default function ExerciseScreen({navigation}) {
           value={searchTerm}
           onChangeText={(text) => setSearchTerm(text)}
         />
+        <View style={styles.checkboxContainer}>
+          <Text style={styles.checkboxLabel}>Filter by Email</Text>
+          <Checkbox
+            disabled={false}
+            value={filterByEmail}
+            onValueChange={(value) => setFilterByEmail(value)}
+          />
+        </View>
+
+        <Picker
+          style={styles.picker}
+          selectedValue={verifiedFilter}
+          onValueChange={(itemValue) => setVerifiedFilter(itemValue)}
+        >
+          <Picker.Item label="All" />
+          <Picker.Item label="Verified" value={true} />
+          <Picker.Item label="Unverified" value={false} />
+        </Picker>
 
         <Button title="Search" onPress={handleSearch} />
+        <Button title="Reset Filters" onPress={resetFilters} />
       </View>
 
       <ScrollView>
@@ -167,6 +229,7 @@ export default function ExerciseScreen({navigation}) {
           <TouchableOpacity key={index} onPress={() => handleExerciseClick(exercise)}>
             <View style={styles.exerciseItem}>
               <Text style={styles.exerciseName}>{exercise.name}</Text>
+              <Text style={styles.verifiedName}>{exercise.verified ? 'verified': ''}</Text>
               <Text>Exercise type: {exercise.type}</Text>
               <Text>Muscle: {exercise.muscle}</Text>
               <Text>Difficulty: {exercise.difficulty}</Text>
@@ -188,11 +251,11 @@ export default function ExerciseScreen({navigation}) {
               <ScrollView style={styles.modalScrollView}>
                 {selectedExercise && (
                   <View>
-                    <Text style={styles.modalTitle}>{selectedExercise.name}</Text>
-                    <Text style={styles.modalText}>Difficulty: {selectedExercise.difficulty}</Text>
-                    <Text style={styles.modalText}>Muscle: {selectedExercise.muscle}</Text>
-                    <Text style={styles.modalText}>Exercise type: {selectedExercise.instructions}</Text>
-                    <Text style={styles.modalText}>Description: {selectedExercise.instructions}</Text>
+                    <Text style={styles.modalTextBold}>{selectedExercise.name}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Description:</Text>{selectedExercise.instructions}</Text>
                   </View>
                 )}
               </ScrollView>
@@ -259,6 +322,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  verifiedName: {
+    fontWeight: 'bold',
+    color: '#008000',
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -267,6 +334,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     marginBottom: 16,
   },
   picker: {
@@ -372,5 +440,23 @@ const styles = StyleSheet.create({
   },
   modalScrollView: {
     maxHeight: '80%', 
+  },
+  picker: {
+    flex: 1,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    padding: 8,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkboxLabel: {
+    marginRight: 8,
+  },
+  modalTextBold: {
+    fontWeight: 'bold',
   },
 });
