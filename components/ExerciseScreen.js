@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
-    flexWrap: Platform.OS === ('web' || 'windows')  ? 'nowrap' : 'wrap',
+    flexWrap: 'wrap',
     alignItems: 'center',
     marginBottom: 16,
   },
