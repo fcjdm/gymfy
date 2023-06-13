@@ -12,7 +12,6 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        setMessage('Login successfully');
         const user = userCredential.user;
         console.log(user);
         navigation.navigate('Home');
@@ -23,7 +22,6 @@ export default function LoginScreen({ navigation }) {
   const handleRegister = () => {
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        setMessage('Register successfully!');
         navigation.navigate('Home');
       })
       .catch((error) => setMessage(error.message));

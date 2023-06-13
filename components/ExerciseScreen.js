@@ -22,6 +22,7 @@ export default function ExerciseScreen({navigation}) {
   const [selectedDifficulty, setSelectedDifficulty] = useState('');
   const [filterByEmail, setFilterByEmail] = useState(false);
   const [verifiedFilter, setVerifiedFilter] = useState();
+  const [showFilters, setShowFilters] = useState(false);
   const [defaultFilters, setDefaultFilters] = useState({
     searchField: 'name',
     selectedDifficulty: '',
@@ -147,10 +148,6 @@ export default function ExerciseScreen({navigation}) {
     setListName('');
   };
 
-  const handleSearch = () => {
-    fetchExercises();
-  };
-
   const fetchUserLists = async () => {
     try {
       const user = auth.currentUser;
@@ -172,59 +169,75 @@ export default function ExerciseScreen({navigation}) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Exercise list</Text>
-
-      <View style={styles.searchContainer}>
-        <Picker
-          style={styles.picker}
-          selectedValue={searchField}
-          onValueChange={(itemValue) => setSearchField(itemValue)}
-        >
-          <Picker.Item label="Name" value="name" />
-          <Picker.Item label="Muscle" value="muscle" />
-          <Picker.Item label="Exercise type" value="type" />
-        </Picker>
-        <Picker
-          style={styles.picker}
-          selectedValue={selectedDifficulty}
-          onValueChange={(itemValue) => setSelectedDifficulty(itemValue)}
-        >
-          <Picker.Item label="Select difficulty" value="" />
-          <Picker.Item label="Beginner" value="beginner" />
-          <Picker.Item label="Intermediate" value="intermediate" />
-          <Picker.Item label="Hard" value="hard" />
-        </Picker>
-
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search exercise"
-          value={searchTerm}
-          onChangeText={(text) => setSearchTerm(text)}
-        />
-        <View style={styles.checkboxContainer}>
-          <Text style={styles.checkboxLabel}>Filter by Email</Text>
-          <Checkbox
-            disabled={false}
-            value={filterByEmail}
-            onValueChange={(value) => setFilterByEmail(value)}
-          />
+      <View style={styles.filterContainer}>
+        <TouchableOpacity onPress={() => setShowFilters(!showFilters)} style={styles.filterButton}>
+          <Text style={styles.filterButtonText}>Filters</Text>
+          <Ionicons name="filter" size={20} color="black" />
+        </TouchableOpacity>
+      </View>
+      {showFilters && (
+        <View style={styles.filters}>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Search Field:</Text>
+            <Picker
+              selectedValue={searchField}
+              style={styles.filterPicker}
+              onValueChange={(itemValue) => setSearchField(itemValue)}
+            >
+              <Picker.Item label="Name" value="name" />
+              <Picker.Item label="Muscle" value="muscle" />
+              <Picker.Item label="Exercise Type" value="type" />
+            </Picker>
+          </View>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Search Term:</Text>
+            <TextInput
+              style={styles.filterInput}
+              placeholder="Search term"
+              onChangeText={(text) => setSearchTerm(text)}
+              value={searchTerm}
+            />
+          </View>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Difficulty:</Text>
+            <Picker
+              selectedValue={selectedDifficulty}
+              style={styles.filterPicker}
+              onValueChange={(itemValue) => setSelectedDifficulty(itemValue)}
+            >
+              <Picker.Item label="Any" value="" />
+              <Picker.Item label="Beginner" value="beginner" />
+              <Picker.Item label="Intermediate" value="intermediate" />
+              <Picker.Item label="Hard" value="hard" />
+            </Picker>
+          </View>
+          <View style={styles.filterRow}>
+            <Checkbox
+              style={styles.filterCheckbox}
+              value={filterByEmail}
+              onValueChange={setFilterByEmail}
+            />
+            <Text style={styles.filterLabel}>Filter by Email</Text>
+          </View>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Verified:</Text>
+            <Picker
+              selectedValue={verifiedFilter}
+              style={styles.filterPicker}
+              onValueChange={(itemValue) => setVerifiedFilter(itemValue)}
+            >
+              <Picker.Item label="Any" value="" />
+              <Picker.Item label="Verified" value="true" />
+              <Picker.Item label="Not Verified" value="false" />
+            </Picker>
+          </View>
+          <View style={styles.filterButtons}>
+            <Button title="Reset Filters" onPress={resetFilters} />
+            <Button title="Apply Filters" onPress={fetchExercises} />
+          </View>
         </View>
-
-        <Picker
-          style={styles.picker}
-          selectedValue={verifiedFilter}
-          onValueChange={(itemValue) => setVerifiedFilter(itemValue)}
-        >
-          <Picker.Item label="All" />
-          <Picker.Item label="Verified" value={true} />
-          <Picker.Item label="Unverified" value={false} />
-        </Picker>
-      </View>
-      <View style={styles.filterButton} >
-        <Button title="Reset Filters" onPress={resetFilters} />
-        <Button title="Search" onPress={handleSearch} />        
-      </View>
-      <ScrollView>
+      )}
+    <ScrollView>
         {exercises.map((exercise, index) => (
           <TouchableOpacity key={index} onPress={() => handleExerciseClick(exercise)}>
             <View style={styles.exerciseItem}>
@@ -319,36 +332,56 @@ export default function ExerciseScreen({navigation}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
     padding: 16,
   },
-  verifiedName: {
-    fontWeight: 'bold',
-    color: '#008000',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  searchContainer: {
+  filterContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   filterButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+
+    paddingVertical: 5,
+  },
+  filterButtonText: {
+    marginRight: 5,
+    fontSize: 16,
+  },
+  filters: {
+    padding: 10,
+    backgroundColor: '#f2f2f2',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 10,
   },
-  searchInput: {
+  filterLabel: {
+    marginRight: 10,
+    fontSize: 16,
+  },
+  filterPicker: {
     flex: 1,
-    marginRight: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    height: 40,
+  },
+  filterInput: {
+    flex: 1,
+    height: 40,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
+    borderColor: 'gray',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+  },
+  filterCheckbox: {
+    marginRight: 10,
+  },
+  filterButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
   },
   exerciseItem: {
     marginBottom: 16,
@@ -457,5 +490,14 @@ const styles = StyleSheet.create({
   },
   modalTextBold: {
     fontWeight: 'bold',
+  },
+  verifiedName: {
+    fontWeight: 'bold',
+    color: '#008000',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
 });
