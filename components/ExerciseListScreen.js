@@ -50,7 +50,7 @@ export default function ExerciseListScreen({navigation}) {
       const exerciseListsData = exerciseListsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setExerciseLists(exerciseListsData);
     } catch (error) {
-      console.log('Error al obtener las listas de ejercicios', error);
+      console.log('Error obtaining lists', error);
     }
   };
 
@@ -72,7 +72,7 @@ export default function ExerciseListScreen({navigation}) {
       setListName('');
       setIsCreateModalVisible(false);
     } catch (error) {
-      console.log('Error al crear la lista de ejercicios', error);
+      console.log('Error creating list', error);
     }
   };
 
@@ -95,7 +95,7 @@ export default function ExerciseListScreen({navigation}) {
       );
       setIsEditModalVisible(false);
     } catch (error) {
-      console.log('Error al editar el nombre de la lista de ejercicios', error);
+      console.log('Error editing list name', error);
     }
   };
 
@@ -109,7 +109,7 @@ export default function ExerciseListScreen({navigation}) {
   
       setIsEditModalVisible(false);
     } catch (error) {
-      console.log('Error al borrar la lista de ejercicios', error);
+      console.log('Error deletin exercise list', error);
     }
   };
 
@@ -149,14 +149,14 @@ export default function ExerciseListScreen({navigation}) {
       setIsDeleteConfirmationVisible(false);
       setSelectedExercise(null);
     } catch (error) {
-      console.log('Error al borrar el ejercicio', error);
+      console.log('Error deleting exercise', error);
     }
   };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Listas de Ejercicios</Text>
+      <Text style={styles.title}>Exercise list</Text>
 
-      <Button title="Crear Lista" onPress={() => setIsCreateModalVisible(true)} />
+      <Button title="Create list" onPress={() => setIsCreateModalVisible(true)} />
 
       <ScrollView>
         {exerciseLists.map((list) => (
@@ -167,7 +167,7 @@ export default function ExerciseListScreen({navigation}) {
           >
             <View style={styles.listItem}>
               <Text style={styles.listName}>{list.name}</Text>
-              <Text>{list.exercises?.length || 0} ejercicios</Text>
+              <Text>{list.exercises?.length || 0} exercises</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -205,10 +205,10 @@ export default function ExerciseListScreen({navigation}) {
               <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedExercise(null)}>
                 <Ionicons name="close" size={24} color="black" />
               </TouchableOpacity>
-              <Text style={styles.modalTextBold}>{selectedExercise.name}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty:</Text>{selectedExercise.instructions}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle:</Text>{selectedExercise.instructions}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type:</Text>{selectedExercise.instructions}</Text>
+              <Text style={styles.modalTitle}>{selectedExercise.name}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty:</Text>{selectedExercise.difficulty}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle:</Text>{selectedExercise.muscle}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type:</Text>{selectedExercise.type}</Text>
                     <Text style={styles.modalText}><Text style={styles.modalTextBold}>Description:</Text>{selectedExercise.instructions}</Text>
             </View>
           </View>
@@ -222,13 +222,13 @@ export default function ExerciseListScreen({navigation}) {
               <TouchableOpacity style={styles.closeButton} onPress={() => setIsCreateModalVisible(false)}>
                 <Ionicons name="close" size={24} color="black" />
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Crear Lista</Text>
+              <Text style={styles.modalTitle}>Create list</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Nombre de la lista"
+                placeholder="List name"
                 onChangeText={(text) => setListName(text)}
               />
-              <Button title="Crear" onPress={handleCreateList} />
+              <Button title="Create" onPress={handleCreateList} />
             </View>
           </View>
         </Modal>
@@ -241,16 +241,16 @@ export default function ExerciseListScreen({navigation}) {
               <TouchableOpacity style={styles.closeButton} onPress={() => setIsEditModalVisible(false)}>
                 <Ionicons name="close" size={24} color="black" />
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Editar Lista</Text>
+              <Text style={styles.modalTitle}>Edit list</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Nombre de la lista"
+                placeholder="List name"
                 value={listName}
                 onChangeText={(text) => setListName(text)}
               />
-              <Button title="Guardar" onPress={handleEditListName} />
+              <Button title="Save" onPress={handleEditListName} />
               <br/>
-              <Button title="Borrar" onPress={handleDeleteList} />
+              <Button title="Delete" onPress={handleDeleteList} />
             </View>
           </View>
         </Modal>
@@ -260,16 +260,16 @@ export default function ExerciseListScreen({navigation}) {
       <Modal isVisible={isDeleteConfirmationVisible} backdropColor={'transparent'} style={{ margin: 0, backgroundColor: 'rgba(0,0,0,.6)' }}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.confirmDeleteText}>¿Estás seguro de que quieres borrar este ejercicio?</Text>
+            <Text style={styles.confirmDeleteText}>Are you sure that you want to delete this exercise?</Text>
             <View style={styles.confirmDeleteButtonsContainer}>
               <Pressable style={styles.confirmDeleteButton} onPress={handleConfirmExerciseDelete}>
-                <Text style={styles.confirmDeleteButtonText}>Sí</Text>
+                <Text style={styles.confirmDeleteButtonText}>Delete</Text>
               </Pressable>
               <Pressable
                 style={[styles.confirmDeleteButton, styles.cancelDeleteButton]}
                 onPress={() => setIsDeleteConfirmationVisible(false)}
               >
-                <Text style={styles.confirmDeleteButtonText}>Cancelar</Text>
+                <Text style={styles.confirmDeleteButtonText}>Cancel</Text>
               </Pressable>
             </View>
           </View>
@@ -366,5 +366,10 @@ const styles = StyleSheet.create({
   },
   modalTextBold: {
     fontWeight: 'bold',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
 });

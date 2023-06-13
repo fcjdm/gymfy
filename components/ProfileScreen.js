@@ -90,7 +90,7 @@ export default function ProfileScreen({ navigation }) {
           Alert.alert('Se ha enviado un correo electrónico para restablecer la contraseña');
         } else if (actionType === 'deleteAccount') {
           await deleteUser(user);
-          navigation.navigate('LoginScreen');
+          navigation.navigate('Login');
           Alert.alert('Cuenta eliminada correctamente');
         }
       }
@@ -225,7 +225,7 @@ export default function ProfileScreen({ navigation }) {
             </Text>
             <View style={styles.modalButtonsContainer}>
               <Button title="Confirm" onPress={confirmAction} color="#dc3545" />
-              <Button title="Cancel" onPress={cancelAction} color="#f0f0f0" />
+              <Button title="Cancel" onPress={cancelAction} />
             </View>
           </View>
         </View>
@@ -308,6 +308,5 @@ const styles = StyleSheet.create({
   },
   modalButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
 });

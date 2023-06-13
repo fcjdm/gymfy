@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Picker } from '@react-native-picker/picker';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Button } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Button, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, collection, getDocs, query, where, doc, updateDoc, getDoc, addDoc } from "firebase/firestore";
 import { arrayUnion } from "firebase/firestore";
@@ -219,11 +219,11 @@ export default function ExerciseScreen({navigation}) {
           <Picker.Item label="Verified" value={true} />
           <Picker.Item label="Unverified" value={false} />
         </Picker>
-
-        <Button title="Search" onPress={handleSearch} />
-        <Button title="Reset Filters" onPress={resetFilters} />
       </View>
-
+      <View style={styles.filterButton} >
+        <Button title="Reset Filters" onPress={resetFilters} />
+        <Button title="Search" onPress={handleSearch} />        
+      </View>
       <ScrollView>
         {exercises.map((exercise, index) => (
           <TouchableOpacity key={index} onPress={() => handleExerciseClick(exercise)}>
@@ -233,8 +233,7 @@ export default function ExerciseScreen({navigation}) {
               <Text>Exercise type: {exercise.type}</Text>
               <Text>Muscle: {exercise.muscle}</Text>
               <Text>Difficulty: {exercise.difficulty}</Text>
-            </View>
-            {/* Agrega el estilo de borde aquí */}
+            </View> 
             <View style={styles.border}></View>
           </TouchableOpacity>
         ))}
@@ -252,9 +251,9 @@ export default function ExerciseScreen({navigation}) {
                 {selectedExercise && (
                   <View>
                     <Text style={styles.modalTextBold}>{selectedExercise.name}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty:</Text>{selectedExercise.instructions}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle:</Text>{selectedExercise.instructions}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty:</Text>{selectedExercise.difficulty}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle:</Text>{selectedExercise.muscle}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type:</Text>{selectedExercise.type}</Text>
                     <Text style={styles.modalText}><Text style={styles.modalTextBold}>Description:</Text>{selectedExercise.instructions}</Text>
                   </View>
                 )}
@@ -333,16 +332,17 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
+    flexWrap: Platform.OS === ('web' || 'windows')  ? 'nowrap' : 'wrap',
     alignItems: 'center',
-    flexWrap: 'wrap',
     marginBottom: 16,
   },
-  picker: {
-    flex: 1,
-    marginRight: 8,
+  filterButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   searchInput: {
-    flex: 2,
+    flex: 1,
     marginRight: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -364,7 +364,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   modalContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
