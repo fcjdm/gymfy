@@ -263,11 +263,11 @@ export default function ExerciseScreen({navigation}) {
               <ScrollView style={styles.modalScrollView}>
                 {selectedExercise && (
                   <View>
-                    <Text style={styles.modalTextBold}>{selectedExercise.name}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty:</Text>{selectedExercise.difficulty}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle:</Text>{selectedExercise.muscle}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type:</Text>{selectedExercise.type}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Description:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalTitle}>{selectedExercise.name}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty: </Text>{selectedExercise.difficulty}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle: </Text>{selectedExercise.muscle}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type: </Text>{selectedExercise.type}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Description: </Text>{selectedExercise.instructions}</Text>
                   </View>
                 )}
               </ScrollView>
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
   },
@@ -489,7 +489,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   modalTextBold: {
-    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
   },

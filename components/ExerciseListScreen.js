@@ -206,10 +206,10 @@ export default function ExerciseListScreen({navigation}) {
                 <Ionicons name="close" size={24} color="black" />
               </TouchableOpacity>
               <Text style={styles.modalTitle}>{selectedExercise.name}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty:</Text>{selectedExercise.difficulty}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle:</Text>{selectedExercise.muscle}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type:</Text>{selectedExercise.type}</Text>
-                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Description:</Text>{selectedExercise.instructions}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Difficulty: </Text>{selectedExercise.difficulty}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Muscle: </Text>{selectedExercise.muscle}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Exercise type: </Text>{selectedExercise.type}</Text>
+                    <Text style={styles.modalText}><Text style={styles.modalTextBold}>Description: </Text>{selectedExercise.instructions}</Text>
             </View>
           </View>
         </Modal>
