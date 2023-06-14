@@ -30,8 +30,18 @@ export default function ExerciseListScreen({navigation}) {
         window.alert('The exercise already exists');
         return;
       }
+      
+    const exerciseToAdd = {
+      name: exerciseData.name.toLowerCase(),
+      difficulty: exerciseData.difficulty,
+      muscle: exerciseData.muscle.toLowerCase(),
+      type: exerciseData.type.toLowerCase(),
+      instructions: exerciseData.instructions,
+      email: exerciseData.email,
+      verified: exerciseData.verified
+    };
   
-      await addDoc(exerciseRef, exerciseData);
+      await addDoc(exerciseRef, exerciseToAdd);
       navigation.navigate('Home');
     } catch (error) {
       console.log('Error adding exercise', error);

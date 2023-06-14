@@ -45,7 +45,8 @@ export default function ExerciseScreen({navigation}) {
       let exercisesQuery = query(collection(db, 'exercises'));
   
       if (searchTerm !== '') {
-        exercisesQuery = query(exercisesQuery, where(searchField, '>=', searchTerm));
+        const searchTermLowerCase = searchTerm.toLowerCase();
+        exercisesQuery = query(exercisesQuery, where(searchField, '>=', searchTermLowerCase));
       }
       if (selectedDifficulty !== '') {
         exercisesQuery = query(exercisesQuery, where('difficulty', '==', selectedDifficulty));
