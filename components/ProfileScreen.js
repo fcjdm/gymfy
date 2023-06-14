@@ -27,7 +27,6 @@ export default function ProfileScreen({ navigation }) {
   const [image, setImage] = useState(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [actionType, setActionType] = useState('');
-
   const user = auth.currentUser;
 
   useEffect(() => {

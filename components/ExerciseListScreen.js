@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Button, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import {collection, getDocs, doc, updateDoc, deleteDoc, addDoc, where, query } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import Modal from 'react-native-modal';
 
@@ -14,11 +14,10 @@ export default function ExerciseListScreen({navigation}) {
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [listName, setListName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
   const [selectedExerciseToDelete, setSelectedExerciseToDelete] = useState(null);
   const [isDeleteConfirmationVisible, setIsDeleteConfirmationVisible] = useState(false);
   const user = auth.currentUser;
-
+  
   useEffect(() => {
     if (isEditModalVisible) {
       setListName(selectedList?.name);
@@ -28,9 +27,8 @@ export default function ExerciseListScreen({navigation}) {
   }, [isEditModalVisible, selectedList]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
+    const unsubscribe = navigation.addListener('focus', () => { 
       fetchExerciseLists();
-      fetchUserEmail();
     });
 
     return () => {
@@ -38,17 +36,11 @@ export default function ExerciseListScreen({navigation}) {
     };
   }, [navigation]);
 
-  const fetchUserEmail = async () => {
-    const user = auth.currentUser;
-    if (user) {
-      setUserEmail(user.email);
-    }
-  };
-
   const fetchExerciseLists = async () => {
     try {
-
-      const exerciseListsSnapshot = await getDocs(collection(db, 'exerciseLists'), where('userEmail', '==', user.email));
+      let exercisesListQuery = query(collection(db, 'exerciseLists'));
+      exercisesListQuery = query(exercisesListQuery, where('userEmail', '==', user.email));
+      const exerciseListsSnapshot = await getDocs(exercisesListQuery);
       const exerciseListsData = exerciseListsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setExerciseLists(exerciseListsData);
     } catch (error) {
@@ -66,7 +58,7 @@ export default function ExerciseListScreen({navigation}) {
       const newList = {
         name: listName,
         exercises: [],
-        userEmail: userEmail,
+        userEmail: user.email,
       };
       const docRef = await addDoc(collection(db, 'exerciseLists'), newList);
       const newListData = { id: docRef.id, ...newList };
@@ -146,7 +138,6 @@ export default function ExerciseListScreen({navigation}) {
   
       // Actualiza la lista de ejercicios en el estado selectedList
       setSelectedList(newList);
-  
       setSelectedExerciseToDelete(null);
       setIsDeleteConfirmationVisible(false);
       setSelectedExercise(null);
