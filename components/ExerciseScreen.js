@@ -489,7 +489,9 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   modalTextBold: {
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 16,
   },
   verifiedName: {
     fontWeight: 'bold',
