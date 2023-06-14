@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Picker, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet} from 'react-native';
 import { getFirestore, collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { auth } from '../firebaseConfig';
+import { Picker } from '@react-native-picker/picker';
 
 export default function ExerciseListScreen({navigation}) {
   const [exerciseData, setExerciseData] = useState({

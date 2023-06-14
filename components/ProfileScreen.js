@@ -10,13 +10,13 @@ import {
   Alert,
   Platform,
   Modal,
-  Picker,
 } from 'react-native';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail, deleteUser, updateProfile } from 'firebase/auth';
 import { auth, storage, db } from '../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Picker } from '@react-native-picker/picker';
 
 export default function ProfileScreen({ navigation }) {
   const [userProfile, setUserProfile] = useState(null);
