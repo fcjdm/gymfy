@@ -248,9 +248,12 @@ export default function ExerciseListScreen({navigation}) {
                 value={listName}
                 onChangeText={(text) => setListName(text)}
               />
-              <Button title="Save" onPress={handleEditListName} />
-              <br/>
-              <Button title="Delete" onPress={handleDeleteList} />
+              <View style={styles.saveButton} >
+                <Button title="Save" onPress={handleEditListName} />
+              </View>
+              <View>
+                <Button title="Delete" onPress={handleDeleteList} />
+              </View>
             </View>
           </View>
         </Modal>
@@ -371,5 +374,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+  },
+  saveButton: {
+    marginBottom: 20,
+    marginTop: 20,
   },
 });
