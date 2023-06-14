@@ -12,7 +12,7 @@ import {
   Modal,
 } from 'react-native';
 import {  doc, setDoc, getDoc, query, where, getDocs, deleteDoc, collection } from 'firebase/firestore';
-import { sendPasswordResetEmail, deleteUser, updateProfile } from 'firebase/auth';
+import { sendPasswordResetEmail, deleteUser} from 'firebase/auth';
 import { auth, storage, db } from '../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -54,12 +54,18 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  const deleteExerciseLists = async (email) => {
+  const deleteProfile = async (email) => {
     try {
       const exerciseListsQuery = query(collection(db, 'exerciseLists'), where('userEmail', '==', email));
       const exerciseListsSnapshot = await getDocs(exerciseListsQuery);
   
       exerciseListsSnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+
+      const profile = query(collection(db, 'users'), where('userEmail', '==', email));
+      const profileSnapshot = await getDocs(profile);
+      profileSnapshot.forEach(async (doc) => {
         await deleteDoc(doc.ref);
       });
   
@@ -77,7 +83,7 @@ export default function ProfileScreen({ navigation }) {
     try {
       if (user) {
         const userDoc = doc(db, 'users', user.uid);
-        await setDoc(userDoc, { name, dateOfBirth, nationality }, { merge: true });
+        await setDoc(userDoc, { name, dateOfBirth, nationality, userEmail: user.email }, { merge: true });
         setIsEditing(false);
         Alert.alert('Perfil actualizado correctamente');
       }
@@ -103,9 +109,12 @@ export default function ProfileScreen({ navigation }) {
           await sendPasswordResetEmail(auth, user.email);
           Alert.alert('Se ha enviado un correo electrónico para restablecer la contraseña');
         } else if (actionType === 'deleteAccount') {
-          await deleteExerciseLists(user.email);
+          await deleteProfile(user.email);
           await deleteUser(user);
-          navigation.navigate('Login');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
           Alert.alert('Cuenta eliminada correctamente');
         }
       }
@@ -208,7 +217,6 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="Spain" value="Spain" />
           <Picker.Item label="France" value="France" />
           <Picker.Item label="Germany" value="Germany" />
-          {/* Agrega más elementos según las nacionalidades que desees */}
         </Picker>
       </View>
       {!isEditing ? (
