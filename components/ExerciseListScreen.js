@@ -17,6 +17,7 @@ export default function ExerciseListScreen({navigation}) {
   const [userEmail, setUserEmail] = useState('');
   const [selectedExerciseToDelete, setSelectedExerciseToDelete] = useState(null);
   const [isDeleteConfirmationVisible, setIsDeleteConfirmationVisible] = useState(false);
+  const user = auth.currentUser;
 
   useEffect(() => {
     if (isEditModalVisible) {
@@ -46,7 +47,8 @@ export default function ExerciseListScreen({navigation}) {
 
   const fetchExerciseLists = async () => {
     try {
-      const exerciseListsSnapshot = await getDocs(collection(db, 'exerciseLists'));
+
+      const exerciseListsSnapshot = await getDocs(collection(db, 'exerciseLists'), where('userEmail', '==', user.email));
       const exerciseListsData = exerciseListsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setExerciseLists(exerciseListsData);
     } catch (error) {

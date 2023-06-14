@@ -11,7 +11,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import {  doc, setDoc, getDoc, query, where, getDocs, deleteDoc, collection } from 'firebase/firestore';
 import { sendPasswordResetEmail, deleteUser, updateProfile } from 'firebase/auth';
 import { auth, storage, db } from '../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
@@ -55,6 +55,21 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
+  const deleteExerciseLists = async (email) => {
+    try {
+      const exerciseListsQuery = query(collection(db, 'exerciseLists'), where('userEmail', '==', email));
+      const exerciseListsSnapshot = await getDocs(exerciseListsQuery);
+  
+      exerciseListsSnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+  
+      console.log('Listas de ejercicios eliminadas correctamente');
+    } catch (error) {
+      console.log('Error al eliminar las listas de ejercicios', error);
+    }
+  };
+
   const handleEditProfile = async () => {
     setIsEditing(true);
   };
@@ -89,6 +104,7 @@ export default function ProfileScreen({ navigation }) {
           await sendPasswordResetEmail(auth, user.email);
           Alert.alert('Se ha enviado un correo electrónico para restablecer la contraseña');
         } else if (actionType === 'deleteAccount') {
+          await deleteExerciseLists(user.email);
           await deleteUser(user);
           navigation.navigate('Login');
           Alert.alert('Cuenta eliminada correctamente');

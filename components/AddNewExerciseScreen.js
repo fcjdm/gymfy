@@ -67,7 +67,7 @@ export default function ExerciseListScreen({navigation}) {
         >
           <Picker.Item label="Beginner" value="beginner" />
           <Picker.Item label="Intermediate" value="intermediate" />
-          <Picker.Item label="Difficult" value="difficult" />
+          <Picker.Item label="Hard" value="hard" />
         </Picker>
       </View>
 
