@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import { StyleSheet, Text, View, Image, BackHandler, Alert } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItem, useDrawerProgress } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItem} from '@react-navigation/drawer';
 import LoginScreen from './components/LoginScreen';
 import ExerciseScreen from './components/ExerciseScreen';
 import { signOut } from 'firebase/auth';
@@ -15,7 +15,6 @@ const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = (props) => {
   const navigation = useNavigation();
-  const progress = useDrawerProgress();
   const handleSignOut = async () => {
     try {
       await signOut(auth); // Utilizar el objeto `auth` importado
@@ -62,11 +61,13 @@ export default function App() {
   const user = auth.currentUser;
   const [authenticated, setAuthenticated] = useState(false);
   const [image, setImage] = useState(null);
+  const [showDrawer, setShowDrawer] = useState(false);
 
   useEffect(() => {
     // Verificar el estado de autenticación
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setAuthenticated(!!user); // Actualizar el estado según si el usuario está autenticado o no
+      setShowDrawer(!!user);
     });
 
     return () => {
@@ -75,8 +76,27 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleSignOut();
+    });
+
+    return () => {
+      backHandler.remove();
+    };
+  }, [authenticated]);
+
+
+  useEffect(() => {
     fetchUserProfile();
   }, [authenticated]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth); // Utilizar el objeto `auth` importado
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -101,13 +121,17 @@ export default function App() {
     <NavigationContainer>
       <Drawer.Navigator
         initialRouteName="Login"
-        drawerContent={(props) => <CustomDrawerContent {...props} image={image} authenticated={authenticated} />}
+        drawerContent={(props) =>
+          showDrawer ? <CustomDrawerContent {...props} image={image} authenticated={authenticated} navigation={props.navigation} /> : null
+        }
       >
-        <Drawer.Screen name="Login" component={LoginScreen} options={{ headerShown: false, drawerLabel: () => null }} />
-        <Drawer.Screen name="Profile" component={ProfileScreen} />
-        <Drawer.Screen name="Home" component={ExerciseScreen} />
-        <Drawer.Screen name="My lists" component={ExerciseListScreen} />
-        <Drawer.Screen name="New Exercise" component={AddNewExerciseScreen} />
+        <>
+          <Drawer.Screen name="Login" component={LoginScreen} options={{ headerShown: false, drawerLabel: () => null }} />
+          <Drawer.Screen name="Profile" component={ProfileScreen} />
+          <Drawer.Screen name="Home" component={ExerciseScreen} />
+          <Drawer.Screen name="My lists" component={ExerciseListScreen} />
+          <Drawer.Screen name="New Exercise" component={AddNewExerciseScreen} />
+        </>
       </Drawer.Navigator>
     </NavigationContainer>
   );
